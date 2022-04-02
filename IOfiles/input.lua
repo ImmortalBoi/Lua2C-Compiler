@@ -1,4 +1,8 @@
 -- fibonacci function with cache
+-- "" "" ""
+--[[
+	testing multiLine comments
+]]
 
 -- very inefficient fibonacci function
 function fib(n)
