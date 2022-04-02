@@ -26,7 +26,7 @@ def commentRemover(allLines:list[str]) -> list[str]:
         if(blockCommentFlag == 1):
             allLines[iterator] = ""            
             
-        # Finding the quotations quotations
+        # Finding the quotations 
         allStringLiterals = findAllOccurenceChar('\"',line)
         
         isThereBlockComment = line.find('--[[')
@@ -56,3 +56,15 @@ def commentRemover(allLines:list[str]) -> list[str]:
         allLines[iterator] = allLines[iterator][:isThereComment]
     
     return allLines
+
+#Removing all the lines with no text in them
+def removeEmptyLines(allLines:list[str])->list[str]:
+    newAllLines = list(filter(checkEmptyLine,allLines))
+    return newAllLines
+#Function to filter out lines that only have certain characters
+def checkEmptyLine(line:str)->bool:
+    for i in range(len(line)):
+        #A changeable filter if necessary
+        if(line[i] != '\n' and line[i] != ' ' and line[i] !='\t'):
+            return True
+    return False
