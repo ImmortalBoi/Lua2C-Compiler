@@ -20,8 +20,8 @@ def commentRemover(allLines:list[str]) -> list[str]:
         
         isThereBlockCommentEnd = line.find(']]')
         if(isThereBlockCommentEnd != -1):
-            allLines[iterator] = allLines[iterator][isThereBlockCommentEnd:]
-            commentBlockFlag = 0
+            allLines[iterator] = allLines[iterator][isThereBlockCommentEnd+2:]
+            blockCommentFlag = 0
             
         if(blockCommentFlag == 1):
             allLines[iterator] = ""            
