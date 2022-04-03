@@ -48,17 +48,17 @@ Lua's complete grammar in EBNF (It does not describe operator precedences.):
 
 	block ::= chunk
 
-	stat ::=  varlist `=´ explist | 
-		 functioncall | 
-		 do block end | 
-		 while exp do block end | 
-		 repeat block until exp | 
-		 if exp then block {elseif exp then block} [else block] end | 
-		 for Name `=´ exp `,´ exp [`,´ exp] do block end | 
-		 for namelist in explist do block end | 
-		 function funcname funcbody | 
-		 local function Name funcbody | 
-		 local namelist [`=´ explist] 
+	stat ::=  varlist `=´ explist |   									
+		functioncall | 
+		"do" block "end" | 
+		"while" exp "do" block "end" | 
+		"repeat" block "until" exp | 
+		"if" exp "then" block {"elseif" exp "then" block} ["else" block] "end" | 
+		"for" Name `=´ exp `,´ exp [`,´ exp] "do" block "end" | 
+		"for" namelist "in" explist "do" block "end" | 
+		"function" funcname funcbody | 
+		"local" "function" Name funcbody | 
+		"local" namelist [`=´ explist] 
 
 	laststat ::= return [explist] | break
 
@@ -72,8 +72,8 @@ Lua's complete grammar in EBNF (It does not describe operator precedences.):
 
 	explist ::= {exp `,´} exp
 
-	exp ::=  nil | false | true | Number | String | `...´ | function | 
-		 prefixexp | tableconstructor | exp binop exp | unop exp 
+	exp ::=  "nil" | "false" | "true" | Number | String | `...´ | function | 
+		prefixexp | tableconstructor | exp binop exp | unop exp 
 
 	prefixexp ::= var | functioncall | `(´ exp `)´
 
@@ -81,9 +81,9 @@ Lua's complete grammar in EBNF (It does not describe operator precedences.):
 
 	args ::=  `(´ [explist] `)´ | tableconstructor | String 
 
-	function ::= function funcbody
+	function ::= "function" funcbody
 
-	funcbody ::= `(´ [parlist] `)´ block end
+	funcbody ::= `(´ [parlist] `)´ block "end"
 
 	parlist ::= namelist [`,´ `...´] | `...´
 
@@ -96,7 +96,7 @@ Lua's complete grammar in EBNF (It does not describe operator precedences.):
 	fieldsep ::= `,´ | `;´
 
 	binop ::= `+´ | `-´ | `*´ | `/´ | `^´ | `%´ | `..´ | 
-		 `<´ | `<=´ | `>´ | `>=´ | `==´ | `~=´ | 
-		 and | or
+		`<´ | `<=´ | `>´ | `>=´ | `==´ | `~=´ | 
+		"and" | "or"
 
-	unop ::= `-´ | not | `#´
+	unop ::= `-´ | "not" | `#´
