@@ -69,9 +69,20 @@ def lexicalAnalysis(allLines:list[str])->list[Token]:
     for index,line in enumerate(allLines):
         word:str = ''
         for i in range(len(line)):
-            if (line[i] in OPERATORS or line[i] in BINOP or line[i] == ' '):
+            if(word == ' ' or word == '\t' or word == '\n'):
+                word = ''
+            elif ((line[i] in OPERATORS or line[i] in BINOP or line[i] == ' ' or line[i] in FIELDSEP) and line[i] != ''):
+                print("CASE 1:" , word)
                 tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
                 word = line[i]
+                continue
+            elif (word in OPERATORS or word in BINOP or word in FIELDSEP or word in UNOP or word in STAT):
+                print("CASE 2" , word)
+                tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
+                word = ''
+                continue
+            if(word == ' ' or word == '\t' or word == '\n'):
+                word = ''
                 continue
             word = word + line[i]
     return tokenList
@@ -79,4 +90,4 @@ def lexicalAnalysis(allLines:list[str])->list[Token]:
 def findTokenSpecification(tokenToBeFound:str)->str:
     if(tokenToBeFound in KEYWORDS):
         return KEYWORDS[tokenToBeFound]
-    return "Identifier"
+    return "IDENTIFIER"
