@@ -54,7 +54,9 @@ BINOP = [
 UNOP = [
     '-'     ,'#'    ,"not"
 ]
-
+NUMBERS = [
+    0     ,1    ,2    ,3    ,4    ,5    ,6    ,7    ,8    ,9    , '.'
+]
 class Token:
     def __init__(self, line:int, startingPosition:int, inputSpecification:str, innerText:str) -> None:
         self.line = line
@@ -99,5 +101,10 @@ def findTokenSpecification(tokenToBeFound:str)->str:
     if(tokenToBeFound in KEYWORDS):
         return KEYWORDS[tokenToBeFound]
     if '"' in tokenToBeFound or '\'' in tokenToBeFound:
-        return "STRING LITERAL" 
+        return "STRING LITERAL"
+    if(tokenIsNumber(tokenToBeFound)):
+        return "NUMBER LITERAL"
     return "IDENTIFIER"
+
+def tokenIsNumber(token:str)->bool:
+    return any(char.isdigit() for char in token)
