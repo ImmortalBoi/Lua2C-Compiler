@@ -67,11 +67,17 @@ class Token:
 def lexicalAnalysis(allLines:list[str])->list[Token]:
     tokenList:list[Token] = []    
     for index,line in enumerate(allLines):
+        stringLiteralDoubleFlag = False
+        stringLiteralSingleFlag = False
         word:str = ''
         for i in range(len(line)):
+            if(line[i] == '"'):
+                stringLiteralDoubleFlag = not stringLiteralDoubleFlag
+            if(line[i] == '\''):
+                stringLiteralSingleFlag = not stringLiteralSingleFlag
             if(word == ' ' or word == '\t' or word == '\n'):
                 word = ''
-            elif ((line[i] in OPERATORS or line[i] in BINOP or line[i] == ' ' or line[i] in FIELDSEP) and line[i] != ''):
+            elif ((line[i] in OPERATORS or line[i] in BINOP or line[i] == ' ' or line[i] in FIELDSEP) and line[i] != '' and word !='' and stringLiteralDoubleFlag == False and stringLiteralSingleFlag == False):
                 print("CASE 1:" , word)
                 tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
                 word = line[i]
@@ -79,15 +85,19 @@ def lexicalAnalysis(allLines:list[str])->list[Token]:
             elif (word in OPERATORS or word in BINOP or word in FIELDSEP or word in UNOP or word in STAT):
                 print("CASE 2" , word)
                 tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
-                word = ''
+                word = line[i]
                 continue
             if(word == ' ' or word == '\t' or word == '\n'):
                 word = ''
                 continue
             word = word + line[i]
+        word = word[:len(word)-1]
+        tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
     return tokenList
 
 def findTokenSpecification(tokenToBeFound:str)->str:
     if(tokenToBeFound in KEYWORDS):
         return KEYWORDS[tokenToBeFound]
+    if '"' in tokenToBeFound or '\'' in tokenToBeFound:
+        return "STRING LITERAL" 
     return "IDENTIFIER"

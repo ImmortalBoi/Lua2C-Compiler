@@ -7,5 +7,4 @@ allLines:list[str] = []
 with(open("./IOfiles/input.lua",'r')) as f:
     allLines = f.readlines()    
 allLines = removeEmptyLines(commentRemover(allLines))
-
 print(lexicalAnalysis(allLines))

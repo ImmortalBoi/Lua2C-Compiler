@@ -44,6 +44,7 @@
 -- fib=cache(fib)
 -- test("cached",fib)
 local dump
+X = 0
 function dump(o)
 	if type(o) == 'table' then
 		local s = '{ '
