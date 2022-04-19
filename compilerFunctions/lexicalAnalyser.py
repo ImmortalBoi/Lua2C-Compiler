@@ -64,7 +64,7 @@ class Token:
         self.inputSpecification = inputSpecification
         self.innerText = innerText
     def __repr__(self) -> str:
-        return "\t" + str(self.line) + "\t" + str(self.startingPosition) + "\t" + str(self.inputSpecification) + "\t" + "||||"+str(self.innerText) +"||||"+"\n"
+        return "\t" + str(self.line) + "\t" + str(self.startingPosition) + "\t" + str(self.inputSpecification) + "\t\t" + "||||"+str(self.innerText) +"||||"+"\n"
         
 def lexicalAnalysis(allLines:list[str])->list[Token]:
     tokenList:list[Token] = []    
@@ -80,12 +80,12 @@ def lexicalAnalysis(allLines:list[str])->list[Token]:
             if(word == ' ' or word == '\t' or word == '\n'):
                 word = ''
             elif ((line[i] in OPERATORS or line[i] in BINOP or line[i] == ' ' or line[i] in FIELDSEP) and line[i] != '' and word !='' and (stringLiteralDoubleFlag == False or stringLiteralSingleFlag == False)):
-                print("CASE 1:" , word)
+                # print("CASE 1:" , word)
                 tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
                 word = line[i]
                 continue
             elif (word in OPERATORS or word in BINOP or word in FIELDSEP or word in UNOP or word in STAT):
-                print("CASE 2" , word)
+                # print("CASE 2" , word)
                 tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
                 word = line[i]
                 continue
