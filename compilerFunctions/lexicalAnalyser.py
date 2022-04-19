@@ -77,7 +77,7 @@ def lexicalAnalysis(allLines:list[str])->list[Token]:
                 stringLiteralSingleFlag = not stringLiteralSingleFlag
             if(word == ' ' or word == '\t' or word == '\n'):
                 word = ''
-            elif ((line[i] in OPERATORS or line[i] in BINOP or line[i] == ' ' or line[i] in FIELDSEP) and line[i] != '' and word !='' and stringLiteralDoubleFlag == False and stringLiteralSingleFlag == False):
+            elif ((line[i] in OPERATORS or line[i] in BINOP or line[i] == ' ' or line[i] in FIELDSEP) and line[i] != '' and word !='' and (stringLiteralDoubleFlag == False or stringLiteralSingleFlag == False)):
                 print("CASE 1:" , word)
                 tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
                 word = line[i]
