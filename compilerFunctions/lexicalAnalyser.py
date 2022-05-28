@@ -1,5 +1,3 @@
-from ast import operator
-
 KEYWORDS = {   
     "do":"STAT"    ,"end":"STAT"      ,"while":"STAT"    ,"repeat":"STAT"   ,"until":"STAT"
     ,"if":"STAT"   ,"then":"STAT"     ,"elseif":"STAT"   ,"else":"STAT"     ,"for":"STAT"
@@ -93,8 +91,8 @@ def lexicalAnalysis(allLines:list[str])->list[Token]:
                 word = ''
                 continue
             word = word + line[i]
-        word = word[:len(word)-1]
-        tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
+        if(word[len(word)-1]!='\n'):
+            tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))        
     return tokenList
 
 def findTokenSpecification(tokenToBeFound:str)->str:
