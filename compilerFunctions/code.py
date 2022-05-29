@@ -242,6 +242,8 @@ def computeAllFirsts():
 	print(f"\nRules: \n")
 	for y in diction:
 		print(f"{y}->{diction[y]}")
+	print("\nDiction: \n")
+	print(diction)
 	print(f"\nAfter elimination of left recursion:\n")
 
 	diction = removeLeftRecursion(diction)
@@ -535,7 +537,7 @@ sample_input_string = None
 # sample_input_string="( id ) * id + id"
 
 # sample set 7 (left factoring & recursion present)
-rules=["S -> A k O",
+rules=["""S -> A k O""",
 	"A -> A d | a B | a C",
 	"C -> c",
 	"B -> b B C | r"]
@@ -577,7 +579,6 @@ computeAllFollows()
 # then generate parse table
 
 (parsing_table, result, tabTerm) = createParseTable()
-
 # validate string input using stack-buffer concept
 if sample_input_string != None:
 	validity = validateStringUsingStackBuffer(parsing_table, result,
