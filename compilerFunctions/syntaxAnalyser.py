@@ -1,51 +1,151 @@
 from lexicalAnalyser import Token,KEYWORDS,STAT,LASTSTAT,EXP,FIELDSEP,OPERATORS,BINOP,UNOP,NUMBERS
 
-Rules = ["chunk -> { stat [ `;´ ] } [ laststat [ `;´ ] ]",
+Rules = ["chunk -> statFull laststatFull",
+
+	"statFull -> # | stat semicolon statFull",
+	"semicolon -> # | `;´",
+	"laststatFull -> # | laststat semicolon ",
 
 	"block -> chunk",
 
-	"""stat ->  varlist `=´ explist | functioncall | "do" block "end" | "while" exp "do" block "end" | "repeat" block "until" exp | "if" exp "then" block {"elseif" exp "then" block} ["else" block] "end" | "for" Name `=´ exp `,´ exp [`,´ exp] "do" block "end" | "for" namelist "in" explist "do" block "end" | "function" funcname funcbody | "local" "function" Name funcbody | "local" namelist [`=´ explist] """,
+	"""stat ->  varlist `=´ explist | functioncall | `do´ block `end´ | `while´ exp `do´ block `end´ | `repeat´ block `until´ exp | `if´ exp `then´ block elseifThen elseChoice `end´ | `for´ Name `=´ exp `,´ exp commaExpChoice `do´ block `end´ | `for´ namelist `in´ explist `do´ block `end´ | `function´ funcname funcbody | `local´ `function´ Name funcbody | `local´ namelist equalExpListChoice """,
+	"elseifThen -> # | elseifThen `elseif´ exp `then´ block",
+	"elseChoice -> # | `else´ block",
+	"commaExpChoice -> # | `,´ exp",
+	"equalExpListChoice -> # | `=´ explist", 
 
-	"laststat -> return [ explist ] | break",
+	"laststat -> `return´ explistChoice | `break´",
+	"explistChoice -> # | explist",
 
-	"funcname -> Name { `.´ Name } [ `:´ Name ]",
+	"funcname -> Name NameDotFull NameColonChoice",
+	"NameDotFull -> # | NameDotFull `.´ Name ",
+	"NameColonChoice -> # |`:´ Name ",
 
-	"varlist -> var { `,´ var }",
+	"varlist -> var varFull",
+	"varFull -> # | varFull `,´ var ",
 
 	"var ->  Name | prefixexp `[´ exp `]´ | prefixexp `.´ Name ",
 
-	"namelist -> Name { `,´ Name }",
+	"namelist -> Name NameFull",
+	"NameCommaFull -> # | NameCommaFull `,´ Name ",
 
-	"explist -> { exp `,´ } exp",
+	"explist -> expFull exp",
+	"expFull -> # | expFull exp `,´ ",
 
-	"""exp ->  "nil" | "false" | "true" | Number | String | `...´ | function | prefixexp | tableconstructor | exp binop exp | unop exp """,
+	"""exp ->  `nil´ | `false´ | `true´ | Number | String | `...´ | function | prefixexp | tableconstructor | exp binop exp | unop exp """,
 
-	"prefixexp -> var | functioncall | `(´ exp `)´",
+	"prefixexp -> `(´ exp `)´ | Name | prefixexp `[´ exp `]´ | prefixexp `.´ Name | prefixexp args | prefixexp `:´ Name args ",
 
 	"functioncall ->  prefixexp args | prefixexp `:´ Name args ",
 
-	"args ->  `(´ [ explist ] `)´ | tableconstructor | String ",
+	"args ->  `(´ explistChoice `)´ | tableconstructor | String ",
 
 	"function -> 'function' funcbody",
 
-	"funcbody -> `(´ [ parlist ] `)´ block 'end'",
+	"funcbody -> `(´ parlistChoice `)´ block 'end'",
+	"parlistChoice -> # | parlist ",
 
-	"parlist -> namelist [`,´ `...´] | `...´",
+	"parlist -> namelist commaTripleDotChoice | `...´",
+	"commaTripleDotChoice -> # | `,´ `...´ ",
 
-	"tableconstructor -> `{´ [ fieldlist ] `}´",
+	"tableconstructor -> `{´ fieldlistChoice `}´",
+	"fieldlistChoice -> # | fieldlist ",
+	"fieldlist -> field fieldsepFull fieldsepChoice",
 
-	"fieldlist -> field { fieldsep field } [ fieldsep ]",
+	"fieldsepFull -> fieldsepFull fieldsep field | #",
+	"fieldsepChoice -> # |fieldsep ",
 
 	"field -> `[´ exp `]´ `=´ exp | Name `=´ exp | exp",
 
 	"fieldsep -> `,´ | `;´",
 
-	"""binop -> `+´ | `-´ | `*´ | `/´ | `^´ | `%´ | `..´ | `<´ | `<=´ | `>´ | `>=´ | `==´ | `~=´ | "and" | "or""",
+	"""binop -> `+´ | `-´ | `*´ | `/´ | `^´ | `%´ | `..´ | `<´ | `<=´ | `>´ | `>=´ | `==´ | `~=´ | `and´ | `or´""",
 
-	"unop -> `-´ | 'not' | `#´"]
+	"unop -> `-´ | `not´ | `#´",
+	
+	'Name -> Char CharDigitFull',
+	"CharDigitFull -> # | CharDigitFull Char | CharDigitFull Digit ",
+	
+	'Char -> `a´|`b´|`c´|`d´|`e´|`f´|`g´|`h´|`i´|`j´|`k´|`l´|`m´|`n´|`o´|`p´|`q´|`r´|`s´|`t´|`u´|`w´|`x´|`y´|`z´|`A´|`B´|`C´|`D´|`E´|`F´|`G´|`H´|`I´|`J´|`K´|`L´|`M´|`N´|`O´|`P´|`Q´|`R´|`S´|`T´|`U´|`W´|`X´|`Y´|`Z´|`_´',
+
+	'Digit -> `0´|`1´|`2´|`3´|`4´|`5´|`6´|`7´|`8´|`9´']
+	# "Char -> `Char´",
+	# "Digit -> `Digit´"]
 
 nonTerminal = ['chunk','block','stat','laststat','funcname','varlist','var','namelist','explist','exp','prefixexp','functioncall','args	','function','funcbody','parlist','tableconstructor','fieldlist','field','fieldsep','binop','unop']
 terminal = {'STAT':STAT,'LASTSTAT':LASTSTAT,'EXP':EXP,'FIELDSEP':FIELDSEP,'OPERATORS':OPERATORS,'BINOP':BINOP,'UNOP':UNOP,'NUMBERS':NUMBERS}
+
+def isTerminal(word:str)->bool:
+	if ('`' in word and '´' in word):
+		return True
+	return False
+
+def checkNotEmptyStrings(arr):
+    if arr == '':
+        return False
+    return True
+
+def first(rule,diction):
+	# print("Recursion Entered")
+	# global rules, nonterm_userdef, \
+	# 	term_userdef, diction, firsts
+	# recursion base condition
+	# (for terminal or epsilon)
+	# print(rule[0])
+	if len(rule) != 0 and (rule is not None):
+		if isTerminal(rule[0]):
+			# print("Entered one")
+			return rule[0]
+		elif rule[0] == '#':
+			return '#'
+
+	# condition for Non-Terminals
+	if len(rule) != 0:
+		# print(rule[0])
+		if rule[0] in list(diction.keys()):
+			# print("Entered Two")
+			# fres temporary list of result
+			fres = []
+			rhs_rules = diction[rule[0]]
+			# print(rhs_rules)
+			# call first on each rule of RHS
+			# fetched (& take union)
+			for itr in rhs_rules:
+				print(f"Entering Recursion for {itr}")
+				indivRes = first(itr,diction)
+				print(f"Exited Recursion for {itr}")
+				if type(indivRes) is list:
+					for i in indivRes:
+						fres.append(i)
+				else:
+					fres.append(indivRes)
+
+			# if no epsilon in result
+			# - received return fres
+			if '#' not in fres:
+				return fres
+			else:
+				# apply epsilon
+				# rule => f(ABC)=f(A)-{e} U f(BC)
+				newList = []
+				fres.remove('#')
+				if len(rule) > 1:
+					ansNew = first(rule[1:],diction)
+					if ansNew != None:
+						if type(ansNew) is list:
+							newList = fres + ansNew
+						else:
+							newList = fres + [ansNew]
+					else:
+						newList = fres
+					return newList
+				# if result is not already returned
+				# - control reaches here
+				# lastly if eplison still persists
+				# - keep it in result of first
+				fres.append('#')
+				return fres
+
 
 def removeLeftRecursions(rulesDiction):
 	# for rule: A->Aa|b
@@ -53,6 +153,7 @@ def removeLeftRecursions(rulesDiction):
 
 	# 'store' has new rules to be added
 	store = {}
+
 	# traverse over rules
 	for lhs in rulesDiction:
 		# alphaRules stores subrules with left-recursion
@@ -144,13 +245,11 @@ def LeftFactoring(rulesDiction):
 			newDict[key] = tempo_dict[key]
 	return newDict
 
-def checkNotEmptyStrings(arr):
-    if arr == '':
-        return False
-    return True
-
-def removeLeftRecursion():
+def syntaxAnalysis(tokenList:list[Token] = None):
+    
 	ruleDictionary = {}
+	firstDictionary = {}
+
 	for rule in Rules:
 		k = rule.split("->")
 		k[0] = k[0].strip()
@@ -160,19 +259,47 @@ def removeLeftRecursion():
 		for i in range(len(multiRhs)):
 			multiRhs[i] = list(filter(checkNotEmptyStrings,multiRhs[i]))
 		ruleDictionary[k[0]] = multiRhs
+	
 	for key, value in ruleDictionary.items():
 		print(key, '\t:\t', value)
 	print('\n')
+	
 	ruleDictionary = removeLeftRecursions(ruleDictionary)
 	for key, value in ruleDictionary.items():
 		print(key, '\t:\t', value)
 	print('\n')
+	
 	ruleDictionary = LeftFactoring(ruleDictionary)
 	for key, value in ruleDictionary.items():
 		print(key, '\t:\t', value)
+	print("\n")
+	
+	for y in list(ruleDictionary.keys()):
+		# try:
+		t = set()
+		for sub in ruleDictionary.get(y):
+			res = first(sub,ruleDictionary)
+			if res != None:
+				if type(res) is list:
+					for u in res:
+						t.add(u)
+				else:
+					t.add(res)
+		# except:
+		# 	print(y)
+		# 	continue
+
+		# save result in 'firsts' list
+		firstDictionary[y] = t
+
+	print("\nCalculated firsts: ")
+	key_list = list(firstDictionary.keys())
+	index = 0
+	for gg in firstDictionary:
+		print(f"first({key_list[index]}) "
+			f"=> {firstDictionary.get(gg)}")
+		index += 1
 
 
-def syntaxAnalysis(tokenList:list[Token]):
-    return False
-
-removeLeftRecursion()
+# print(isTerminal('`(´'))
+syntaxAnalysis()

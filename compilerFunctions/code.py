@@ -123,7 +123,9 @@ def first(rule):
 			# call first on each rule of RHS
 			# fetched (& take union)
 			for itr in rhs_rules:
+				print(f"Entering Recursion for {itr}")
 				indivRes = first(itr)
+				print(f"Exited Recursion for {itr}")
 				if type(indivRes) is list:
 					for i in indivRes:
 						fres.append(i)
@@ -242,6 +244,7 @@ def computeAllFirsts():
 	print(f"\nRules: \n")
 	for y in diction:
 		print(f"{y}->{diction[y]}")
+	
 	print("\nDiction: \n")
 	print(diction)
 	print(f"\nAfter elimination of left recursion:\n")
