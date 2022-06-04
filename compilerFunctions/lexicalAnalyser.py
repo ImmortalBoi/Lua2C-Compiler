@@ -72,16 +72,25 @@ def lexicalAnalysis(allLines:list[str])->list[Token]:
         stringLiteralSingleFlag = False
         word:str = ''
         for i in range(len(line)):
+            
             if(line[i] == '"'):
                 stringLiteralDoubleFlag = not stringLiteralDoubleFlag
             if(line[i] == '\''):
                 stringLiteralSingleFlag = not stringLiteralSingleFlag
+            if(stringLiteralSingleFlag == True or stringLiteralDoubleFlag == True):
+                word += line[i]
+                continue
+            
+            # print(f"Letter = {line[i]}")
             if(word == ' ' or word == '\t' or word == '\n'):
                 word = ''
             elif ((line[i] in OPERATORS or line[i] in BINOP or line[i] == ' ' or line[i] in FIELDSEP) and line[i] != '' and word !='' and (stringLiteralDoubleFlag == False or stringLiteralSingleFlag == False)):
                 # print("CASE 1:" , word)
                 tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
                 word = line[i]
+                if(word in OPERATORS):
+                    tokenList.append(Token(index,i-len(word),findTokenSpecification(word),word))
+                    word = ''
                 continue
             elif (word in OPERATORS or word in BINOP or word in FIELDSEP or word in UNOP or word in STAT):
                 # print("CASE 2" , word)
@@ -100,10 +109,10 @@ def findTokenSpecification(tokenToBeFound:str)->str:
     if(tokenToBeFound in KEYWORDS):
         return KEYWORDS[tokenToBeFound]
     if '"' in tokenToBeFound or '\'' in tokenToBeFound:
-        return "STRING LITERAL"
-    if(tokenIsNumber(tokenToBeFound)):
-        return "NUMBER LITERAL"
-    return "IDENTIFIER"
+        return "STRING_LITERAL"
+    if(tokenToBeFound[0].isdigit()):
+        return "NUMBER_LITERAL"
+    return "NAME_LITERAL"
 
 def tokenIsNumber(token:str)->bool:
     return any(char.isdigit() for char in token)

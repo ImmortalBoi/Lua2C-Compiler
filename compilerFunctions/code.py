@@ -576,6 +576,7 @@ computeAllFirsts()
 # assuming first rule has start_symbol
 # start symbol can be modified in below line of code
 start_symbol = list(diction.keys())[0]
+print(f"Start symbols = {start_symbol}")
 # computes all FOLLOWs for all occurrences
 computeAllFollows()
 # generate formatted first and follow table

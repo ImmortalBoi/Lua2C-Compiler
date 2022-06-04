@@ -40,9 +40,9 @@ Rules = ["chunk -> statFull laststatFull",
 
 	"args ->  `(´ explistChoice `)´ | tableconstructor | String ",
 
-	"function -> 'function' funcbody",
+	"function -> `function´ funcbody",
 
-	"funcbody -> `(´ parlistChoice `)´ block 'end'",
+	"funcbody -> `(´ parlistChoice `)´ block `end´",
 	"parlistChoice -> # | parlist ",
 
 	"parlist -> namelist commaTripleDotChoice | `...´",
@@ -63,12 +63,13 @@ Rules = ["chunk -> statFull laststatFull",
 
 	"unop -> `-´ | `not´ | `#´",
 	
-	'Name -> Char CharDigitFull',
-	"CharDigitFull -> # | CharDigitFull Char | CharDigitFull Digit ",
+	"Name -> `NAME_LITERAL´",
+	"String -> `STRING_LITERAL´",
+	"Number -> `NUMBER_LITERAL´",]
 	
-	'Char -> `a´|`b´|`c´|`d´|`e´|`f´|`g´|`h´|`i´|`j´|`k´|`l´|`m´|`n´|`o´|`p´|`q´|`r´|`s´|`t´|`u´|`w´|`x´|`y´|`z´|`A´|`B´|`C´|`D´|`E´|`F´|`G´|`H´|`I´|`J´|`K´|`L´|`M´|`N´|`O´|`P´|`Q´|`R´|`S´|`T´|`U´|`W´|`X´|`Y´|`Z´|`_´',
+	# 'Char -> `a´|`b´|`c´|`d´|`e´|`f´|`g´|`h´|`i´|`j´|`k´|`l´|`m´|`n´|`o´|`p´|`q´|`r´|`s´|`t´|`u´|`w´|`x´|`y´|`z´|`A´|`B´|`C´|`D´|`E´|`F´|`G´|`H´|`I´|`J´|`K´|`L´|`M´|`N´|`O´|`P´|`Q´|`R´|`S´|`T´|`U´|`W´|`X´|`Y´|`Z´|`_´',
 
-	'Digit -> `0´|`1´|`2´|`3´|`4´|`5´|`6´|`7´|`8´|`9´']
+	# # 'Digit -> `0´|`1´|`2´|`3´|`4´|`5´|`6´|`7´|`8´|`9´']
 	# "Char -> `Char´",
 	# "Digit -> `Digit´"]
 
@@ -86,34 +87,26 @@ def checkNotEmptyStrings(arr):
     return True
 
 def first(rule,diction):
-	# print("Recursion Entered")
-	# global rules, nonterm_userdef, \
-	# 	term_userdef, diction, firsts
 	# recursion base condition
 	# (for terminal or epsilon)
-	# print(rule[0])
 	if len(rule) != 0 and (rule is not None):
 		if isTerminal(rule[0]):
-			# print("Entered one")
 			return rule[0]
 		elif rule[0] == '#':
 			return '#'
 
 	# condition for Non-Terminals
 	if len(rule) != 0:
-		# print(rule[0])
 		if rule[0] in list(diction.keys()):
-			# print("Entered Two")
 			# fres temporary list of result
 			fres = []
 			rhs_rules = diction[rule[0]]
-			# print(rhs_rules)
 			# call first on each rule of RHS
 			# fetched (& take union)
 			for itr in rhs_rules:
-				print(f"Entering Recursion for {itr}")
+				# print(f"Entering Recursion for {itr}")
 				indivRes = first(itr,diction)
-				print(f"Exited Recursion for {itr}")
+				# print(f"Exited Recursion for {itr}")
 				if type(indivRes) is list:
 					for i in indivRes:
 						fres.append(i)
@@ -122,11 +115,14 @@ def first(rule,diction):
 
 			# if no epsilon in result
 			# - received return fres
+			# print(rule[0])
 			if '#' not in fres:
+				# print(fres)
 				return fres
 			else:
 				# apply epsilon
 				# rule => f(ABC)=f(A)-{e} U f(BC)
+				# print(fres)
 				newList = []
 				fres.remove('#')
 				if len(rule) > 1:
@@ -146,6 +142,74 @@ def first(rule,diction):
 				fres.append('#')
 				return fres
 
+# follow function input is the split result on
+# - Non-Terminal whose Follow we want to compute
+def follow(nt,diction):
+	start_symbol = "chunk"
+	# global nonterm_userdef, \
+	# 	term_userdef, diction, firsts, follows
+	# for start symbol return $ (recursion base case)
+
+	solset = set()
+	if nt == start_symbol:
+		# return '$'
+		solset.add('$')
+
+	# check all occurrences
+	# solset - is result of computed 'follow' so far
+
+	# For input, check in all rules
+	for curNT in diction:
+		rhs = diction[curNT]
+		# go for all productions of NT
+		for subrule in rhs:
+			if nt in subrule:
+				# call for all occurrences on
+				# - non-terminal in subrule
+				while nt in subrule:
+					index_nt = subrule.index(nt)
+					subrule = subrule[index_nt + 1:]
+					# empty condition - call follow on LHS
+					if len(subrule) != 0:
+						# compute first if symbols on
+						# - RHS of target Non-Terminal exists
+						res = first(subrule,diction)
+						# if epsilon in result apply rule
+						# - (A->aBX)- follow of -
+						# - follow(B)=(first(X)-{ep}) U follow(A)
+						if '#' in res:
+							newList = []
+							res.remove('#')
+							print(f"Entering Recursion of {curNT} on variable ansNew")
+							ansNew = follow(curNT,diction)
+							print(f"Exiting Recursion of {curNT} on variable ansNew")
+							if ansNew != None:
+								if type(ansNew) is list:
+									newList = res + ansNew
+								else:
+									newList = res + [ansNew]
+							else:
+								newList = res
+							res = newList
+					else:
+						# when nothing in RHS, go circular
+						# - and take follow of LHS
+						# only if (NT in LHS)!=curNT
+						if nt != curNT:
+							print(f"Entering Recursion of {curNT} on variable res")
+							res = follow(curNT,diction)
+							print(f"Exiting Recursion of {curNT} on variable res")
+
+
+					# add follow result in set form
+					if res is not None:
+						if type(res) is list:
+							for g in res:
+								solset.add(g)
+						else:
+							solset.add(res)
+	return list(solset)
+
 
 def removeLeftRecursions(rulesDiction):
 	# for rule: A->Aa|b
@@ -163,9 +227,12 @@ def removeLeftRecursions(rulesDiction):
 		# get rhs for current lhs
 		allrhs = rulesDiction[lhs]
 		for subrhs in allrhs:
+			print(f"subrhs[0]: {subrhs[0]}")
 			if subrhs[0] == lhs:
 				alphaRules.append(subrhs[1:])
+				print(f"alphaRules:{alphaRules}")
 			else:
+				print(f"betaRules:{betaRules}")
 				betaRules.append(subrhs)
 		# alpha and beta containing subrules are separated
 		# now form two new rules
@@ -173,12 +240,14 @@ def removeLeftRecursions(rulesDiction):
 			# to generate new unique symbol
 			# add ' till unique not generated
 			lhs_ = lhs + "'"
-			while (lhs_ in rulesDiction.keys()) \
-					or (lhs_ in store.keys()):
+			while (lhs_ in rulesDiction.keys()) or (lhs_ in store.keys()):
 				lhs_ += "'"
 			# make beta rule
+			print(f"betaRules : {betaRules}")
 			for b in range(0, len(betaRules)):
 				betaRules[b].append(lhs_)
+				print(f"lhs_ : {lhs_}")
+			print(f"betaRules : {betaRules}")
 			rulesDiction[lhs] = betaRules
 			# make alpha rule
 			for a in range(0, len(alphaRules)):
@@ -249,6 +318,7 @@ def syntaxAnalysis(tokenList:list[Token] = None):
     
 	ruleDictionary = {}
 	firstDictionary = {}
+	followDictionary = {}
 
 	for rule in Rules:
 		k = rule.split("->")
@@ -292,13 +362,37 @@ def syntaxAnalysis(tokenList:list[Token] = None):
 		# save result in 'firsts' list
 		firstDictionary[y] = t
 
-	print("\nCalculated firsts: ")
+	print("\nCalculated first Dictionary: ")
 	key_list = list(firstDictionary.keys())
 	index = 0
 	for gg in firstDictionary:
 		print(f"first({key_list[index]}) "
 			f"=> {firstDictionary.get(gg)}")
 		index += 1
+	
+	# # global start_symbol, rules, nonterm_userdef,\
+	# # term_userdef, diction, firsts, follows
+	# for NT in ruleDictionary:
+	# 	try:
+	# 		print("----------------------------------------------------------------------")
+	# 		print(NT)
+	# 		solset = set()
+	# 		sol = follow(NT,ruleDictionary)
+	# 		if sol is not None:
+	# 			for g in sol:
+	# 				solset.add(g)
+	# 		followDictionary[NT] = solset
+	# 	except:
+	# 		print("-------------------------BROKEN---------------------------------------------")
+	# 		continue
+
+	# print("\nCalculated follow Dictionary: ")
+	# key_list = list(followDictionary.keys())
+	# index = 0
+	# for gg in followDictionary:
+	# 	print(f"follow({key_list[index]})"
+	# 		f" => {followDictionary[gg]}")
+	# 	index += 1
 
 
 # print(isTerminal('`(´'))
