@@ -1,4 +1,5 @@
 from lexicalAnalyser import Token,KEYWORDS,STAT,LASTSTAT,EXP,FIELDSEP,OPERATORS,BINOP,UNOP,NUMBERS
+import copy
 
 Rules = ["chunk -> statFull laststatFull",
 
@@ -26,7 +27,7 @@ Rules = ["chunk -> statFull laststatFull",
 
 	"var ->  Name | prefixexp `[´ exp `]´ | prefixexp `.´ Name ",
 
-	"namelist -> Name NameFull",
+	"namelist -> Name NameCommaFull",
 	"NameCommaFull -> # | NameCommaFull `,´ Name ",
 
 	"explist -> expFull exp",
@@ -73,8 +74,11 @@ Rules = ["chunk -> statFull laststatFull",
 	# "Char -> `Char´",
 	# "Digit -> `Digit´"]
 
-nonTerminal = ['chunk','block','stat','laststat','funcname','varlist','var','namelist','explist','exp','prefixexp','functioncall','args	','function','funcbody','parlist','tableconstructor','fieldlist','field','fieldsep','binop','unop']
-terminal = {'STAT':STAT,'LASTSTAT':LASTSTAT,'EXP':EXP,'FIELDSEP':FIELDSEP,'OPERATORS':OPERATORS,'BINOP':BINOP,'UNOP':UNOP,'NUMBERS':NUMBERS}
+nonTerminal = ['Number','String','Name','unop','binop','fieldsep','field','fieldsepChoice','fieldsepFull','fieldlist','fieldlistChoice','tableconstructor','commaTripleDotChoice','parlist','parlistChoice','funcbody','function','args','functioncall','prefixexp','exp','expFull','explist','NameCommaFull','namelist','var','varFull','varlist','NameColonChoice','NameDotFull','funcname','explistChoice','chunk','statFull','semicolon','laststatFull','block','stat','elseifThen','elseChoice','commaExpChoice','equalExpListChoice','laststat']
+print(len(nonTerminal))
+terminal = {    "do"    ,"end"      ,"while"    ,"repeat"   ,"until"    ,"if"   ,"then"     ,"elseif"   ,"else"     ,"for"    ,"in"   ,"function" ,"local",    "return","break",    "nil"   ,"false"    ,"true",    ":"     ,",",    "("     ,")"    ,"{"    ,"}"    ,"["    
+    ,"]"    ,";"    ,"."    ,".."   ,"...",    "+"     ,"-"    ,"*"    ,"/"    ,"%"    ,"^"    ,"#"    ,"=="   ,"~="   ,"<="
+    ,">="   ,"<"    ,">"    ,"="    ,"and"    ,"or",    '-'     ,'#'    ,"not",'NAME_LITERAL','STRING_LITERAL','NUMBER_LITERAL'}
 
 def isTerminal(word:str)->bool:
 	if ('`' in word and '´' in word):
@@ -144,10 +148,11 @@ def first(rule,diction):
 
 # follow function input is the split result on
 # - Non-Terminal whose Follow we want to compute
-def follow(nt,diction):
+def follow(nt,diction,memoization = {}):
+	key = nt
+	if(key in memoization):
+		return memoization[key]
 	start_symbol = "chunk"
-	# global nonterm_userdef, \
-	# 	term_userdef, diction, firsts, follows
 	# for start symbol return $ (recursion base case)
 
 	solset = set()
@@ -162,6 +167,9 @@ def follow(nt,diction):
 	for curNT in diction:
 		rhs = diction[curNT]
 		# go for all productions of NT
+		# print('\n')
+		# print(curNT)
+		# print(rhs)
 		for subrule in rhs:
 			if nt in subrule:
 				# call for all occurrences on
@@ -174,15 +182,25 @@ def follow(nt,diction):
 						# compute first if symbols on
 						# - RHS of target Non-Terminal exists
 						res = first(subrule,diction)
+						# print(f"subrule:{subrule}")
+						# print(f"res: {res}")
 						# if epsilon in result apply rule
 						# - (A->aBX)- follow of -
 						# - follow(B)=(first(X)-{ep}) U follow(A)
 						if '#' in res:
 							newList = []
 							res.remove('#')
+							print(res)
 							print(f"Entering Recursion of {curNT} on variable ansNew")
-							ansNew = follow(curNT,diction)
-							print(f"Exiting Recursion of {curNT} on variable ansNew")
+							flag = 0
+							for i in diction[curNT]:
+								if(curNT in i):
+									flag = 1
+									break
+							if(flag == 1):
+								continue
+							ansNew = follow(curNT,diction,memoization=memoization)
+							# print(f"Exiting Recursion of {curNT} on variable ansNew")
 							if ansNew != None:
 								if type(ansNew) is list:
 									newList = res + ansNew
@@ -196,11 +214,10 @@ def follow(nt,diction):
 						# - and take follow of LHS
 						# only if (NT in LHS)!=curNT
 						if nt != curNT:
-							print(f"Entering Recursion of {curNT} on variable res")
-							res = follow(curNT,diction)
-							print(f"Exiting Recursion of {curNT} on variable res")
-
-
+							# print(f"Entering Recursion of {curNT} on variable res")
+							res = follow(curNT,diction,memoization=memoization)
+							# print(f"Exiting Recursion of {curNT} on variable res")
+					# print(f"Res is {res}")
 					# add follow result in set form
 					if res is not None:
 						if type(res) is list:
@@ -208,7 +225,12 @@ def follow(nt,diction):
 								solset.add(g)
 						else:
 							solset.add(res)
-	return list(solset)
+					# print(f"solset: {solset}")
+	# print("Entered outside the loop")
+	# print(f"solset outside loop: {solset}")
+	memoization[key] = list(solset)
+	# print("Returning ",memoization[key])
+	return memoization[key]
 
 
 def removeLeftRecursions(rulesDiction):
@@ -227,12 +249,13 @@ def removeLeftRecursions(rulesDiction):
 		# get rhs for current lhs
 		allrhs = rulesDiction[lhs]
 		for subrhs in allrhs:
-			print(f"subrhs[0]: {subrhs[0]}")
+			# print(f"\nsubrhs[0]: {subrhs[0]} lhs: {lhs}")
 			if subrhs[0] == lhs:
+				
 				alphaRules.append(subrhs[1:])
-				print(f"alphaRules:{alphaRules}")
+				# print(f"alphaRules:{alphaRules}")
 			else:
-				print(f"betaRules:{betaRules}")
+				# print(f"betaRules:{betaRules}")
 				betaRules.append(subrhs)
 		# alpha and beta containing subrules are separated
 		# now form two new rules
@@ -243,11 +266,11 @@ def removeLeftRecursions(rulesDiction):
 			while (lhs_ in rulesDiction.keys()) or (lhs_ in store.keys()):
 				lhs_ += "'"
 			# make beta rule
-			print(f"betaRules : {betaRules}")
+			# print(f"betaRules before adding lhs: {betaRules}")
 			for b in range(0, len(betaRules)):
 				betaRules[b].append(lhs_)
-				print(f"lhs_ : {lhs_}")
-			print(f"betaRules : {betaRules}")
+				# print(f"lhs_ : {lhs_}")
+			# print(f"betaRules after adding lhs: {betaRules}")
 			rulesDiction[lhs] = betaRules
 			# make alpha rule
 			for a in range(0, len(alphaRules)):
@@ -314,6 +337,89 @@ def LeftFactoring(rulesDiction):
 			newDict[key] = tempo_dict[key]
 	return newDict
 
+def createParseTable(diction,firsts,follows,terminals):
+	print("\nFirsts and Follow Result table\n")
+
+	# find space size
+	mx_len_first = 0
+	mx_len_fol = 0
+	for u in diction:
+		k1 = len(str(firsts[u]))
+		k2 = len(str(follows[u]))
+		if k1 > mx_len_first:
+			mx_len_first = k1
+		if k2 > mx_len_fol:
+			mx_len_fol = k2
+
+	print(f"{{:<{10}}} "
+		f"{{:<{mx_len_first + 5}}} "
+		f"{{:<{mx_len_fol + 5}}}"
+		.format("Non-T", "FIRST", "FOLLOW"))
+	for u in diction:
+		print(f"{{:<{10}}} "
+			f"{{:<{mx_len_first + 5}}} "
+			f"{{:<{mx_len_fol + 5}}}"
+			.format(u, str(firsts[u]), str(follows[u])))
+
+	# create matrix of row(NT) x [col(T) + 1($)]
+	# create list of non-terminals
+	ntlist = list(diction.keys())
+	terminals = copy.deepcopy(terminals)
+	terminals.append('$')
+
+	# create the initial empty state of ,matrix
+	mat = []
+	for x in diction:
+		row = []
+		for y in terminals:
+			row.append('')
+		# of $ append one more col
+		mat.append(row)
+
+	# Classifying grammar as LL(1) or not LL(1)
+	grammar_is_LL = True
+
+	# rules implementation
+	for lhs in diction:
+		rhs = diction[lhs]
+		for y in rhs:
+			res = first(y)
+			# epsilon is present,
+			# - take union with follow
+			if '#' in res:
+				if type(res) == str:
+					firstFollow = []
+					fol_op = follows[lhs]
+					if fol_op is str:
+						firstFollow.append(fol_op)
+					else:
+						for u in fol_op:
+							firstFollow.append(u)
+					res = firstFollow
+				else:
+					res.remove('#')
+					res = list(res) +\
+						list(follows[lhs])
+			# add rules to table
+			ttemp = []
+			if type(res) is str:
+				ttemp.append(res)
+				res = copy.deepcopy(ttemp)
+			for c in res:
+				xnt = ntlist.index(lhs)
+				yt = terminals.index(c)
+				if mat[xnt][yt] == '':
+					mat[xnt][yt] = mat[xnt][yt] \
+								+ f"{lhs}->{' '.join(y)}"
+				else:
+					# if rule already present
+					if f"{lhs}->{y}" in mat[xnt][yt]:
+						continue
+					else:
+						grammar_is_LL = False
+						mat[xnt][yt] = mat[xnt][yt] \
+									+ f",{lhs}->{' '.join(y)}"
+
 def syntaxAnalysis(tokenList:list[Token] = None):
     
 	ruleDictionary = {}
@@ -330,15 +436,18 @@ def syntaxAnalysis(tokenList:list[Token] = None):
 			multiRhs[i] = list(filter(checkNotEmptyStrings,multiRhs[i]))
 		ruleDictionary[k[0]] = multiRhs
 	
+	print("Original Grammer: ")
 	for key, value in ruleDictionary.items():
 		print(key, '\t:\t', value)
 	print('\n')
 	
+	print("Grammar after removal of left recursion")
 	ruleDictionary = removeLeftRecursions(ruleDictionary)
 	for key, value in ruleDictionary.items():
 		print(key, '\t:\t', value)
 	print('\n')
 	
+	print("Grammar after left factoring")
 	ruleDictionary = LeftFactoring(ruleDictionary)
 	for key, value in ruleDictionary.items():
 		print(key, '\t:\t', value)
@@ -372,27 +481,27 @@ def syntaxAnalysis(tokenList:list[Token] = None):
 	
 	# # global start_symbol, rules, nonterm_userdef,\
 	# # term_userdef, diction, firsts, follows
-	# for NT in ruleDictionary:
-	# 	try:
-	# 		print("----------------------------------------------------------------------")
-	# 		print(NT)
-	# 		solset = set()
-	# 		sol = follow(NT,ruleDictionary)
-	# 		if sol is not None:
-	# 			for g in sol:
-	# 				solset.add(g)
-	# 		followDictionary[NT] = solset
-	# 	except:
-	# 		print("-------------------------BROKEN---------------------------------------------")
-	# 		continue
+	for NT in ruleDictionary:
+		
+		print("----------------------------------------------------------------------")
+		print(NT)
+		solset = set()
+		sol = follow(NT,ruleDictionary)
+		print(f"Afterwards : {sol}")
+		if sol is not None:
+			for g in sol:
+				solset.add(g)
+		followDictionary[NT] = solset
 
-	# print("\nCalculated follow Dictionary: ")
-	# key_list = list(followDictionary.keys())
-	# index = 0
-	# for gg in followDictionary:
-	# 	print(f"follow({key_list[index]})"
-	# 		f" => {followDictionary[gg]}")
-	# 	index += 1
+	print("\nCalculated follow Dictionary: ")
+	key_list = list(followDictionary.keys())
+	index = 0
+	for gg in followDictionary:
+		print(f"follow({key_list[index]})"
+			f" => {followDictionary[gg]}")
+		index += 1
+	
+	createParseTable(ruleDictionary,firstDictionary,followDictionary,terminal)
 
 
 # print(isTerminal('`(´'))
