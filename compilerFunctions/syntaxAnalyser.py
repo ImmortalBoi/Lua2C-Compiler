@@ -1,4 +1,3 @@
-from lexicalAnalyser import Token,KEYWORDS,STAT,LASTSTAT,EXP,FIELDSEP,OPERATORS,BINOP,UNOP,NUMBERS
 import copy
 
 Rules = ["chunk -> statFull laststatFull",
@@ -75,10 +74,10 @@ Rules = ["chunk -> statFull laststatFull",
 	# "Digit -> `Digit´"]
 
 nonTerminal = ['Number','String','Name','unop','binop','fieldsep','field','fieldsepChoice','fieldsepFull','fieldlist','fieldlistChoice','tableconstructor','commaTripleDotChoice','parlist','parlistChoice','funcbody','function','args','functioncall','prefixexp','exp','expFull','explist','NameCommaFull','namelist','var','varFull','varlist','NameColonChoice','NameDotFull','funcname','explistChoice','chunk','statFull','semicolon','laststatFull','block','stat','elseifThen','elseChoice','commaExpChoice','equalExpListChoice','laststat']
-print(len(nonTerminal))
-terminal = {    "do"    ,"end"      ,"while"    ,"repeat"   ,"until"    ,"if"   ,"then"     ,"elseif"   ,"else"     ,"for"    ,"in"   ,"function" ,"local",    "return","break",    "nil"   ,"false"    ,"true",    ":"     ,",",    "("     ,")"    ,"{"    ,"}"    ,"["    
+# print(len(nonTerminal))
+terminal = [    "do"    ,"end"      ,"while"    ,"repeat"   ,"until"    ,"if"   ,"then"     ,"elseif"   ,"else"     ,"for"    ,"in"   ,"function" ,"local",    "return","break",    "nil"   ,"false"    ,"true",    ":"     ,",",    "("     ,")"    ,"{"    ,"}"    ,"["    
     ,"]"    ,";"    ,"."    ,".."   ,"...",    "+"     ,"-"    ,"*"    ,"/"    ,"%"    ,"^"    ,"#"    ,"=="   ,"~="   ,"<="
-    ,">="   ,"<"    ,">"    ,"="    ,"and"    ,"or",    '-'     ,'#'    ,"not",'NAME_LITERAL','STRING_LITERAL','NUMBER_LITERAL'}
+    ,">="   ,"<"    ,">"    ,"="    ,"and"    ,"or",    '-'     ,'#'    ,"not",'NAME_LITERAL','STRING_LITERAL','NUMBER_LITERAL']
 
 def isTerminal(word:str)->bool:
 	if ('`' in word and '´' in word):
@@ -91,8 +90,7 @@ def checkNotEmptyStrings(arr):
     return True
 
 def first(rule,diction):
-	# recursion base condition
-	# (for terminal or epsilon)
+	# recursion base condition if terminal or episolon
 	if len(rule) != 0 and (rule is not None):
 		if isTerminal(rule[0]):
 			return rule[0]
@@ -190,8 +188,8 @@ def follow(nt,diction,memoization = {}):
 						if '#' in res:
 							newList = []
 							res.remove('#')
-							print(res)
-							print(f"Entering Recursion of {curNT} on variable ansNew")
+							# print(res)
+							# print(f"Entering Recursion of {curNT} on variable ansNew")
 							flag = 0
 							for i in diction[curNT]:
 								if(curNT in i):
@@ -337,9 +335,10 @@ def LeftFactoring(rulesDiction):
 			newDict[key] = tempo_dict[key]
 	return newDict
 
-def createParseTable(diction,firsts,follows,terminals):
+def createParseTable(diction,firsts,follows,terminalList):
 	print("\nFirsts and Follow Result table\n")
 
+	print(f"Terminals : {terminalList}")
 	# find space size
 	mx_len_first = 0
 	mx_len_fol = 0
@@ -364,7 +363,7 @@ def createParseTable(diction,firsts,follows,terminals):
 	# create matrix of row(NT) x [col(T) + 1($)]
 	# create list of non-terminals
 	ntlist = list(diction.keys())
-	terminals = copy.deepcopy(terminals)
+	terminals = copy.deepcopy(terminalList)
 	terminals.append('$')
 
 	# create the initial empty state of ,matrix
@@ -383,7 +382,7 @@ def createParseTable(diction,firsts,follows,terminals):
 	for lhs in diction:
 		rhs = diction[lhs]
 		for y in rhs:
-			res = first(y)
+			res = first(y,diction)
 			# epsilon is present,
 			# - take union with follow
 			if '#' in res:
@@ -407,6 +406,8 @@ def createParseTable(diction,firsts,follows,terminals):
 				res = copy.deepcopy(ttemp)
 			for c in res:
 				xnt = ntlist.index(lhs)
+				if("`" in c and "´" in c):
+					c = c.replace("`",'').replace("´","")
 				yt = terminals.index(c)
 				if mat[xnt][yt] == '':
 					mat[xnt][yt] = mat[xnt][yt] \
@@ -419,8 +420,26 @@ def createParseTable(diction,firsts,follows,terminals):
 						grammar_is_LL = False
 						mat[xnt][yt] = mat[xnt][yt] \
 									+ f",{lhs}->{' '.join(y)}"
+    
+	# final state of parse table
+	print("\nGenerated parsing table:\n")
+	frmt = "{:>30}" * len(terminals)
+	print(frmt.format(*terminals))
 
-def syntaxAnalysis(tokenList:list[Token] = None):
+	j = 0
+	for y in mat:
+		frmt1 = "{:>30}" * len(y)
+		print(f"{ntlist[j]} {frmt1.format(*y)}")
+		j += 1
+	# print(type(mat))
+	# for i in range(len(mat)):
+	# 	for j in range(len(mat[i])):
+	# 		print(mat[i][j])
+	# print(mat)
+	print(grammar_is_LL)
+	return (mat, grammar_is_LL, terminals)
+
+def syntaxAnalysis(terminal):
     
 	ruleDictionary = {}
 	firstDictionary = {}
@@ -436,7 +455,7 @@ def syntaxAnalysis(tokenList:list[Token] = None):
 			multiRhs[i] = list(filter(checkNotEmptyStrings,multiRhs[i]))
 		ruleDictionary[k[0]] = multiRhs
 	
-	print("Original Grammer: ")
+	print("Original Grammar: ")
 	for key, value in ruleDictionary.items():
 		print(key, '\t:\t', value)
 	print('\n')
@@ -483,11 +502,11 @@ def syntaxAnalysis(tokenList:list[Token] = None):
 	# # term_userdef, diction, firsts, follows
 	for NT in ruleDictionary:
 		
-		print("----------------------------------------------------------------------")
-		print(NT)
+		# print("----------------------------------------------------------------------")
+		# print(NT)
 		solset = set()
 		sol = follow(NT,ruleDictionary)
-		print(f"Afterwards : {sol}")
+		# print(f"Afterwards : {sol}")
 		if sol is not None:
 			for g in sol:
 				solset.add(g)
@@ -501,8 +520,8 @@ def syntaxAnalysis(tokenList:list[Token] = None):
 			f" => {followDictionary[gg]}")
 		index += 1
 	
-	createParseTable(ruleDictionary,firstDictionary,followDictionary,terminal)
+	(mat, grammar_is_LL, terminals) = createParseTable(ruleDictionary,firstDictionary,followDictionary,terminal)
 
 
 # print(isTerminal('`(´'))
-syntaxAnalysis()
+syntaxAnalysis(terminal)
