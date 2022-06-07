@@ -10,3 +10,4 @@ for i=1 ,5, 1 do
 end
     print("Even number =",even)
     print("Odd number =",odd)
+

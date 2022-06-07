@@ -397,8 +397,7 @@ def createParseTable(diction,firsts,follows,terminalList):
 					res = firstFollow
 				else:
 					res.remove('#')
-					res = list(res) +\
-						list(follows[lhs])
+					res = list(res) + list(follows[lhs])
 			# add rules to table
 			ttemp = []
 			if type(res) is str:
@@ -524,4 +523,3 @@ def syntaxAnalysis(terminal):
 
 
 # print(isTerminal('`(´'))
-syntaxAnalysis(terminal)
